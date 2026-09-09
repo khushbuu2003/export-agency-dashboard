@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: export-agency-dashboard
+    env: php
+    buildCommand: "./render-build.sh"
+    startCommand: "php -S 0.0.0.0:$PORT -t public/ public/index.php"
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        sync: false
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: DB_DATABASE
+        value: /opt/render/project/src/database/database.sqlite
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: MAIL_MAILER
+        value: log
