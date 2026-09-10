@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
-    && docker-php-ext-install pdo pdo_sqlite
+    && docker-php-ext-install pdo pdo_sqlite pdo_mysql
 
 # Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
@@ -27,12 +27,13 @@ COPY . /var/www/html
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Setup database & directory permissions
-RUN mkdir -p database storage bootstrap/cache \
-    && touch database/database.sqlite \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 storage bootstrap/cache database
+# Set environment variables for SQLite database
+ENV DB_CONNECTION=sqlite
+ENV DB_DATABASE=/var/www/html/database/database.sqlite
+ENV APP_ENV=production
+ENV APP_DEBUG=false
+ENV LOG_CHANNEL=stderr
 
 EXPOSE 80
 
-CMD php artisan migrate --force && php artisan db:seed --force && apache2-foreground
+CMD touch /var/www/html/database/database.sqlite && chown -R www-data:www-data /var/www/html/database && chmod -R 777 /var/www/html/database && php artisan migrate --force && php artisan db:seed --force && apache2-foreground
