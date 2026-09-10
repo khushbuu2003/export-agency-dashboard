@@ -27,6 +27,17 @@ COPY . /var/www/html
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
+# Create storage directory structure & grant full permissions to www-data
+RUN mkdir -p storage/framework/sessions \
+             storage/framework/views \
+             storage/framework/cache \
+             storage/logs \
+             bootstrap/cache \
+             database \
+    && touch database/database.sqlite \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 777 storage bootstrap/cache database
+
 # Set environment variables for SQLite database
 ENV DB_CONNECTION=sqlite
 ENV DB_DATABASE=/var/www/html/database/database.sqlite
@@ -36,4 +47,10 @@ ENV LOG_CHANNEL=stderr
 
 EXPOSE 80
 
-CMD touch /var/www/html/database/database.sqlite && chown -R www-data:www-data /var/www/html/database && chmod -R 777 /var/www/html/database && php artisan migrate --force && php artisan db:seed --force && apache2-foreground
+CMD mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs bootstrap/cache database \
+    && touch database/database.sqlite \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 777 storage bootstrap/cache database \
+    && php artisan migrate --force \
+    && php artisan db:seed --force \
+    && apache2-foreground
